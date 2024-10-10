@@ -24,8 +24,8 @@ st.set_page_config(
     layout="centered",
     )
 
-AWS_ACCESS_KEY=os.getenv("ACCESS_KEY")
-AWS_SECRET_KEY=os.getenv("SECRET_KEY")
+AWS_ACCESS_KEY=os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY=os.getenv("AWS_SECRET_KEY")
 REGION=os.getenv("REGION")
 S3_BUCKET_NAME= os.getenv("S3_BUCKET_NAME")
 DATABASE_FILENAME = os.getenv("DATABASE_FILENAME")
