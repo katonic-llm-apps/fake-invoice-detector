@@ -39,7 +39,7 @@ def find_matching_json(response_content, bucket_name, jsonl_file_name, s3):
 
     try:
         # Get the object from S3
-        s3_object = s3.get_object(Bucket=bucket_name, Key="metadata/"+jsonl_file_name)
+        s3_object = s3.get_object(Bucket=bucket_name, Key="database/"+jsonl_file_name)
         # Read the content of the file
         content = s3_object['Body'].read().decode('utf-8')
 
