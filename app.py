@@ -41,10 +41,15 @@ AWS_S3_CREDS = {
 
 s3 = boto3.client('s3',**AWS_S3_CREDS)
 
+with st.sidebar:
+    # st.image('image/logo.png')
+    selected = option_menu(
+        menu_title="Main Menu",
+        options=["About the App", "Check Invoice"])
 
-def main():
+if selected=="Check Invoice":
     
-    st.image("Deloitte.png",width=175)
+    # st.image("Deloitte.png",width=175)
     st.markdown("""
         <style>
             .top-bar {
@@ -146,7 +151,7 @@ def main():
 
 
                 if matched_file_path:
-                    st.success(f"Similar Invoice found! {matched_file_path}")
+                    # st.success(f"Similar Invoice found! {matched_file_path}")
                     
                     def get_image_response(base64_image, matched_file_path):
 
@@ -154,82 +159,75 @@ def main():
 
 
                         messages = [
-                            {
-                                "role": "system", 
-                                "content": "You are a helpful assistant that compares given invoice to the database."
-                            },
-                            {
-                                "role": "user", 
-                                "content": [
-                                    {
-                                        "type": "text", 
-                                        "text": """
-                                        You are reviewing an invoice and comparing it to historical record Database. Based on the cases below, follow the inspection criteria and note your findings in the remarks section.
+                            {"role": "system", "content": "You are a helpful assistant that compares given invoice to multiple records in database ."},
+                            {"role": "user", "content": [
+                                {"type": "text", "text": """You are reviewing an invoice and comparing it to database . Based on the cases below, follow the inspection criteria and note your findings in the justification section.
 
-                                        CASE 1: Duplicate Invoices
-                                            Inspection Criteria:
-                                                Identify duplicate invoices viz. same invoice number, same amount raised every month, same invoice submitted by multiple employees
-                                            Inspection Check:
-                                                Are the invoice number, amount, and submission details (such as employee information) consistent with previous records in the database? If Yes, then mark it as Fail
-                                            Remark:
-                                                Provide justification based on the database comparison, highlighting if the invoice is a duplicate or not wrt to the database.Dont mention the invoice number.
+                                                CASE 1: Duplicate Invoices
+                                                    Inspection Criteria:
+                                                        Check if the invoice number matches any existing records in the database.
+                                                        If yes,Check if the invoice amount is consistent with previous entries for the same invoice number.
+                                                        Check if the same invoice has been submitted under different buyer names.
+                                                    Inspection Check:
+                                                        Is the given invoice number found identical with database records?
+                                                        Is the given invoice amount is same as any record in database?
+                                                        Has the same invoice been submitted by different buyers?
+                                                    Remark:
+                                                        Identify duplicate invoices viz. same invoice number, same amount raised every month, same invoice submitted by multiple employees.If checks suggest duplication, then mark it as YES.
 
-                                        CASE 2: Invoice Format Changes
-                                            Inspection Criteria:
-                                                Check if the given invoice letterhead is different from the database invoices.
-                                                Check if the given font style letterhead is different from the database invoices.
-                                                Check if the given invoice design is different from the database invoices.
-                                            Inspection Check:
-                                                Has the invoice letterhead,font style or invoice design of the invoice changed compared to previous submissions by the same vendor?
-                                            Remark:
-                                                Mention any noticeable changes in the invoice design, font, or layout when compared to historical records.
+                                                CASE 2: Invoice Format Changes
+                                                    Inspection Criteria:
+                                                        Check if the given invoice letterhead is different from the database invoices of the same vendor.
+                                                        Check if the given font style is different from the database invoices of the same vendor.
+                                                        Check if the given invoice design is different from the database invoices of the same vendor.
+                                                    Inspection Check:
+                                                        Is the letterhead different for the invoice generated by same vendor?
+                                                        Is the Font style different for the invoice generated by same vendor?
+                                                        Is the design different for the invoice generated by same vendor?
+                                                    Remark:
+                                                        Identify instances wherein format of the invoice of the same vendor has been changed compared to previous versions (change in letter head, change in font style, change in design). If yes, mark it as YES
 
-                                        CASE 3: Changes in Sign & Stamp
-                                            Inspection Criteria:
-                                                Check is the sign and stamp exits in invoice.A sign will have a label "Signature" above which it is signed.
-                                                If yes, Check if the signature or stamp differs from historical records from the same Seller.
-                                                If yes, Verify if the same seller has unauthorized alterations in sign or stamp.
-                                                If the sign is missing in any of the records then mark it as NA because there is no comparison.
-                                            Inspection Check:
-                                                If the stamp or sign exist in both the invoice, Has the signature or stamp changed compared to previous database invoices?
-                                            Remark:
-                                                Provide details on any changes in the signature or stamp of the same seller, mentioning if it appears unauthorized based on database records.If Sign or stamp do not exist in both or exist in database of images of the invoice,then mark it as NA.
+                                                CASE 3: Changes in Sign & Stamp
+                                                    Inspection Criteria:
+                                                        Check if the sign and stamp exits in given invoice.
+                                                        If yes, Check if the same seller has a different signature or stamp in its database invoices.
+                                                        Note: If the sign is missing in any of the records then mark it as NA because there is no comparison.
+                                                    Inspection Check:
+                                                        Is the signature same in the invoice generated by same vendor in the database?
+                                                        Is the stamp same in the invoice generated by same vendor in the database?
+                                                        Is there any Style changes in sign or stamp of same vendor in the database?
+                                                    Remark:
+                                                        if sign or stamp is present in given image and database then check If any changes are found in the signature or stamp by the same vendor to the database, mention the differences found in the style compared to the stored records.If crteria fulfils ,mark it as YES, otherwise mark it as No
 
-                                        CASE 4: Pricing Discrepancies
-                                            Inspection Criteria:
-                                                Check if both the invoices have same product in the invoice.
-                                                If same product is mentioned,Compare the rate charged for the product or service with previous invoices from the same vendor.
-                                                compare if the service/product description is consistent with previous records.
+                                                CASE 4: Pricing Discrepancies
+                                                    Inspection Criteria:
+                                                        Check if both the invoices have same product in the invoice given and the database.
+                                                        If any same product does not exist in database, then consider it a No.
+                                                        If same product is mentioned,Compare the rate charged for the product or service with previous invoices from the same vendor.
+                                                    Inspection Check:
+                                                        Is the rate same for same product or services given by the same vendor?    
+                                                    Remark:
+                                                        If any instances exist wherein different rate has been charged for same type of services / products in different invoices of the same vendor, mark it as YES.
+
+                                                For each case, ensure the findings are thoroughly compared against the database, and report the findings based on the criteria above. Provide an overall summary at the end.
+                                                Each Check should be answered by either "✅" or "❌", with a justification provided in the Justification column. If the answer is Not Applicable, consider it No.
                                                 
-                                            Inspection Check:
-                                                Is the pricing different for the same service or product across invoices provided by the same vendor?
-                                            Remark:
-                                                Mention discrepancies in product/service pricing for the same product provided by the same vendor.If the same product is not mentioned in database records, then mark it as NA.
+                                                Note for Framing Response:
+                                                    - THE JUSTIFICATION SHOULD BE FRAMED AS THOUGH THEY ARE BEING COMPARED TO THE DATABASE, NOT AN INDIVIDUAL IMAGE.
 
-                                        Provide an overall summary at the end of all checks.Overall summary should mention the case name in which it lies with proper justification.
-                                        Each Inspection Criteria should be answered Pass,Fail or NA , with a justification provided in the Inspection Remarks section.
-                            
+                                                There should be justification for each and every Inspection check.
+                                                
 
-                                        Note for Framing Response:
-                                            - THE INSPECTION REMARKS SHOULD BE FRAMED AS THOUGH THEY ARE BEING COMPARED TO THE DATABASE, NOT AN INDIVIDUAL IMAGE.
-                                        
-                                        Note for JSON format:
-                                            - The last object should contain the Overall Summary and be part of the array or a separate key in the main object.
-                                            
-                                        Return the response in proper JSON format with the following columns: Inspection Criteria, Inspection Check ,Result(Pass/Fail/NA), Inspection Remarks (justification in brief ), and an Overall Summary.
-                                        IMPORTANT: THE RESPONSE SHOULD NOT BE RANDOM, AND YOU MUST STRICTLY READ THROUGH THE CRITERIA AND TAKE DECISION.
-                                        """
-                                    },
-                                    {
-                                        "type": "image_url", 
-                                        "image_url": {"url": f"data:image/png;base64,{base64_image}"}
-                                    },
-                                    {
-                                        "type": "image_url", 
-                                        "image_url": {"url": f"data:image/png;base64,{matched_image_string}"}
-                                    }
-                                ]
-                            }
+                                                Note for JSON format:
+                                                    - The last object (which contains the Overall Summary) should be part of the array in the main object at the end.
+
+                                                You must return the response in proper JSON format with the following columns: Inspection Check, Result , Justification, and Overall Summary.
+                                                
+                                                IMPORTANT: THE RESPONSE SHOULD NOT BE RANDOM, AND YOU MUST STRICTLY READ THROUGH THE CRITERIA AND TAKE DECISION.
+                                                """},
+                                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}},
+                                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{matched_image_string}"}}
+                            ]}
                         ]
 
                         llm_response = llm_model.invoke(messages).content
@@ -243,33 +241,92 @@ def main():
                     response = get_image_response(base64_image, matched_file_path)
                     response = json.loads(response)
 
-                inspection_items = [item for item in response if 'Inspection Criteria' in item]
-                overall_summary = next((item['Overall Summary'] for item in response if 'Overall Summary' in item), None)
+                    sections = {
+                        "Duplicate Invoices": [0, 1, 2],
+                        "Edited Invoices": [3, 4, 5],
+                        "Changes in Sign & Stamp": [6, 7, 8],
+                        "Pricing Discrepancies": [9],
+                        "Overall Summary": [10]
+                    }
 
-                df = pd.DataFrame(inspection_items)
+                    # Prepare the formatted data
+                    formatted_data = []
 
-                if overall_summary:
-                    summary_row = pd.DataFrame({
-                        'Inspection Criteria': ['Overall Summary'],
-                        'Inspection Check': [''],
-                        'Result': [''],
-                        'Inspection Remarks': [overall_summary]
-                    })
-                    df = pd.concat([df, summary_row], ignore_index=True)
+                    for section, indices in sections.items():
+                        if section != "Overall Summary":
+                            # Add section name as a row
+                            formatted_data.append([section, '', ''])
+                        
+                        # For each index in the section, get the corresponding data
+                        for idx in indices:
+                            entry = response[idx]
+                            if 'Inspection Check' in entry:
+                                # Add inspection check, result, and justification under the section
+                                formatted_data.append([
+                                    entry['Inspection Check'],
+                                    entry['Result'],
+                                    entry['Justification']
+                                ])
+                            elif 'Overall Summary' in entry:
+                                formatted_data.append(['', '', ''])
+                                formatted_data.append(['Overall Summary', '', entry['Overall Summary']])
 
-                df = pd.DataFrame(df)
-                st.data_editor(
-                    df,
-                    column_config={
-                        "Inspection Check": st.column_config.Column(
-                            "Inspection Check",
-                            width="medium",
-                            required=True,
-                        )
-                    },
-                    hide_index=True,
-                )
-      
+                    # Create DataFrame with the required columns
+                    df = pd.DataFrame(formatted_data, columns=['Inspection Check', 'Result', 'Justification'])
 
-if __name__ == "__main__":
-    main()
+                    st.data_editor(
+                        df,
+                        column_config={
+                            "Inspection Check": st.column_config.Column(
+                                "Inspection Check",
+                                width="large",
+                                required=True,
+                            ),
+                            "Result": st.column_config.Column(
+                                "Result",
+                                width="medium",
+                                required=True,
+                            )
+                        },
+                        hide_index=True,
+                        disabled=True,
+                        height=600
+                    )
+
+if selected=="About the App":
+    st.title("Welcome to Invoice Management Application!")
+
+    st.write(
+        "In today's fast-paced business world, keeping track of invoices can be a daunting task. "
+        "This app simplifies this process, empowering you to manage your invoices with ease and confidence."
+    )
+
+    st.subheader("Key Features:")
+    
+    features = {
+        "🔍 Smart Duplicate Detection": (
+            "Say goodbye to confusion and errors! This app intelligently scans your invoices to identify any duplicates, "
+            "helping you maintain accurate records."
+        ),
+        "📝 Comprehensive Editing Insights": (
+            "Have you ever received an edited invoice and wondered about the changes? "
+            "This app highlights all modifications, allowing you to stay informed and make well-informed decisions."
+        ),
+        "💰 Pricing Discrepancy Alerts": (
+            "Spot pricing inconsistencies before they become a problem. "
+            "This app monitors your invoices for any unexpected pricing changes, ensuring you’re always in control of your finances."
+        ),
+        "✍️ Sign & Stamp Verification": (
+            "Verify any alterations in signatures or stamps to maintain the integrity of your documents. "
+            "This app provides a clear overview of these changes, keeping you one step ahead."
+        ),
+        "📊 Detailed Reporting": (
+            "Gain valuable insights into your invoice management with structured summaries. "
+            "This app categorizes findings into easy-to-read sections, giving you a comprehensive view of your invoicing landscape."
+        ),
+    }
+
+    for feature, description in features.items():
+        st.markdown(f"**{feature}**")
+        st.write(description)
+        st.write("")  # Add an empty line for spacing
