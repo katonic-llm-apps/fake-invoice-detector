@@ -21,7 +21,7 @@ from langchain.chat_models import ChatOpenAI
 from utils import(encode_image,save_files,find_matching_json,get_image_from_s3)
 
 st.set_page_config(
-    page_title='Fake Invoice Detection ',
+    page_title='Vendor Invoice Check ',
     layout="centered",
     )
 
@@ -67,7 +67,7 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1> Fake Invoice Detection</h1>', unsafe_allow_html=True)
+    st.markdown('<h1> Vendor Invoice Check</h1>', unsafe_allow_html=True)
 
     with open("style.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -164,17 +164,15 @@ def main():
                                     {
                                         "type": "text", 
                                         "text": """
-                                        You are reviewing an invoice and comparing it to historical records or data stored in a database. Based on the cases below, follow the inspection criteria and note your findings in the remarks section.
+                                        You are reviewing an invoice and comparing it to historical record Database. Based on the cases below, follow the inspection criteria and note your findings in the remarks section.
 
                                         CASE 1: Duplicate Invoices
                                             Inspection Criteria:
-                                                Check if the invoice number matches any existing records.
-                                                Check if the invoice amount is consistent with previous entries for the same invoice.
-                                                Check if the same invoice has been submitted under different employee names.
+                                                Identify duplicate invoices viz. same invoice number, same amount raised every month, same invoice submitted by multiple employees
                                             Inspection Check:
-                                                Are the invoice number, amount, and submission details (such as employee information) consistent with previous records in the database?
+                                                Are the invoice number, amount, and submission details (such as employee information) consistent with previous records in the database? If Yes, then mark it as Fail
                                             Remark:
-                                                Provide justification based on the database comparison, highlighting if the invoice is a duplicate or not wrt to the database.
+                                                Provide justification based on the database comparison, highlighting if the invoice is a duplicate or not wrt to the database.Dont mention the invoice number.
 
                                         CASE 2: Invoice Format Changes
                                             Inspection Criteria:
@@ -188,34 +186,37 @@ def main():
 
                                         CASE 3: Changes in Sign & Stamp
                                             Inspection Criteria:
-                                                Check is the sign and stamp exits in both the invoice.
+                                                Check is the sign and stamp exits in invoice.A sign will have a label "Signature" above which it is signed.
                                                 If yes, Check if the signature or stamp differs from historical records from the same Seller.
-                                                If yes, Verify if the same seller has unauthorized alterations in sign or stamp 
+                                                If yes, Verify if the same seller has unauthorized alterations in sign or stamp.
+                                                If the sign is missing in any of the records then mark it as NA because there is no comparison.
                                             Inspection Check:
                                                 If the stamp or sign exist in both the invoice, Has the signature or stamp changed compared to previous database invoices?
                                             Remark:
-                                                Provide details on any changes in the signature or stamp of the same seller, mentioning if it appears unauthorized based on database records.If Sign or stamp do not exist in both or exist in either of images of the invoice,then mark it as No.
+                                                Provide details on any changes in the signature or stamp of the same seller, mentioning if it appears unauthorized based on database records.If Sign or stamp do not exist in both or exist in database of images of the invoice,then mark it as NA.
 
                                         CASE 4: Pricing Discrepancies
                                             Inspection Criteria:
                                                 Check if both the invoices have same product in the invoice.
                                                 If same product is mentioned,Compare the rate charged for the product or service with previous invoices from the same vendor.
                                                 compare if the service/product description is consistent with previous records.
+                                                
                                             Inspection Check:
                                                 Is the pricing different for the same service or product across invoices provided by the same vendor?
                                             Remark:
-                                                Mention discrepancies in product/service pricing for the same product provided by the same vendor.If same product does not exist, then mark it as No.
+                                                Mention discrepancies in product/service pricing for the same product provided by the same vendor.If the same product is not mentioned in database records, then mark it as NA.
 
                                         Provide an overall summary at the end of all checks.Overall summary should mention the case name in which it lies with proper justification.
-                                        Each Inspection Criteria should be answered Yes or No, with a justification provided in the Inspection Remarks section.
-                                        If the answer is Not Applicable, consider it No.
+                                        Each Inspection Criteria should be answered Pass,Fail or NA , with a justification provided in the Inspection Remarks section.
+                            
 
-                                        IMPORTANT: The Inspection remarks should be framed as though they are being compared to the database, not an individual image.
+                                        Note for Framing Response:
+                                            - THE INSPECTION REMARKS SHOULD BE FRAMED AS THOUGH THEY ARE BEING COMPARED TO THE DATABASE, NOT AN INDIVIDUAL IMAGE.
                                         
                                         Note for JSON format:
                                             - The last object should contain the Overall Summary and be part of the array or a separate key in the main object.
                                             
-                                        Return the response in proper JSON format with the following columns: Inspection Criteria, Inspection Check ,Result(Yes/No), Inspection Remarks (justification), and an Overall Summary.
+                                        Return the response in proper JSON format with the following columns: Inspection Criteria, Inspection Check ,Result(Pass/Fail/NA), Inspection Remarks (justification in brief ), and an Overall Summary.
                                         IMPORTANT: THE RESPONSE SHOULD NOT BE RANDOM, AND YOU MUST STRICTLY READ THROUGH THE CRITERIA AND TAKE DECISION.
                                         """
                                     },
@@ -257,7 +258,17 @@ def main():
                     df = pd.concat([df, summary_row], ignore_index=True)
 
                 df = pd.DataFrame(df)
-                st.dataframe(df,hide_index=True,height=None)
+                st.data_editor(
+                    df,
+                    column_config={
+                        "Inspection Check": st.column_config.Column(
+                            "Inspection Check",
+                            width="medium",
+                            required=True,
+                        )
+                    },
+                    hide_index=True,
+                )
       
 
 if __name__ == "__main__":
