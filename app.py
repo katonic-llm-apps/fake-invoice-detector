@@ -274,24 +274,15 @@ if selected=="Check Invoice":
                     # Create DataFrame with the required columns
                     df = pd.DataFrame(formatted_data, columns=['Inspection Check', 'Result', 'Justification'])
 
-                    st.data_editor(
-                        df,
-                        column_config={
-                            "Inspection Check": st.column_config.Column(
-                                "Inspection Check",
-                                width="large",
-                                required=True,
-                            ),
-                            "Result": st.column_config.Column(
-                                "Result",
-                                width="medium",
-                                required=True,
-                            )
-                        },
-                        hide_index=True,
-                        disabled=True,
-                        height=600
-                    )
+                    def style_dataframe(row):
+                        styles = [''] * len(row)
+                        if row['Inspection Check'] in sections.keys():
+                            styles[0] = 'color: #000000; font-weight: bold'
+                        return styles
+
+                    # Apply the styling
+                    df = df.style.apply(style_dataframe, axis=1)
+                    st.dataframe(df,hide_index=True,height=600)
 
 if selected=="About the App":
     st.title("Welcome to Invoice Management Application!")
