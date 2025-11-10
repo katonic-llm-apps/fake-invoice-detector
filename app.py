@@ -88,7 +88,7 @@ if selected=="Check Invoice":
 
     if uploaded_file:
         
-        DEFAULT_DIR_PATH = "./"
+        DEFAULT_DIR_PATH = os.getcwd()
         files_path = os.path.join(DEFAULT_DIR_PATH, "files")
 
         col1, col2, col3 = st.columns([1.75, 4, 1])
@@ -103,7 +103,8 @@ if selected=="Check Invoice":
 
         base64_image = encode_image(uploaded_file)
 
-        folder_name = '/home/katonic/uploaded_files'    
+        # folder_name = '/home/katonic/uploaded_files' 
+        files_path = os.path.join(DEFAULT_DIR_PATH, "uploaded_files")   
         os.makedirs(folder_name, exist_ok=True)     
         image_path = os.path.join(folder_name, uploaded_file.name)
 

@@ -13,7 +13,7 @@ def encode_image(image_path):
         return base64.b64encode(image_path.read()).decode("utf-8")
 
 
-DEFAULT_DIR_PATH = "./"
+DEFAULT_DIR_PATH = os.getcwd()
 files_path = os.path.join(DEFAULT_DIR_PATH, "files")
 
 def save_files(files_list):
